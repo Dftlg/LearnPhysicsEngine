@@ -1,0 +1,326 @@
+---
+typora-root-url: taiji-image
+---
+
+# chapter 1
+
+拉格朗日视角：
+
+指流体中存在的节点为移动的，同时检测每个节点当前的速度和位置
+
+拉格朗日同时记录速度和位置
+
+欧拉视角：
+
+指在流体中存在固定的检测器，检测穿过检测器的材料的速度是多少。
+
+欧拉通常不计位置，位置通常不会改变。
+
+通常拉格朗日是使用粒子，欧拉视角使用网格（但不绝对）
+
+![image-20210908105001535](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210908105001535.png)
+
+左边PBD使用拉格朗日视角，粒子会产生移动携带自己的速度和位置。
+
+右边使用欧拉视角，表示烟雾模拟，网格上的每个点表示穿过流体的速度，**每个粒子不计算位置**。
+
+## 简单弹簧质点系统：
+
+![image-20210908110253263](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210908110253263.png)
+
+1. 存在粒子i和j, |xi-xj|2-lij表示两粒子中间隐式表示弹簧的现场长-原长度，乘以单位向量（向量i指向j）
+2. 求质点i的所有外力
+3. 求解速度
+4. 求解位置
+
+## 欧拉视角：求解固体力学
+
+![image-20210120193437930](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210120193437930.png)
+
+### 使用半隐式欧拉求解弹簧质点系统
+
+![image-20210908111740349](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210908111740349.png)
+
+计算节点速度，是否碰撞到地面，计算位置
+
+如果x节点位置与地面进行了碰撞，那麽就不需要在进行位移，
+
+![image-20210120193936929](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210120193936929.png)
+
+**1.显式计算器，前向欧拉，后一帧运动只依赖于前一帧的状态。**
+
+很容易产生爆炸，爆炸和震动周期有关。本来一个震动周期应该表示一个time step但，当产生两个震动周期在一个time step中，会产生爆炸。课程：数值分析
+
+<u>注意点：对于硬的材料需要给定的时间段长小，因此不是特别适合。</u>
+
+**2.隐式比较难以实现以及优化，但不容易产生爆炸现象**
+
+每一步消耗更昂贵，但time steps更大
+
+### 弹簧质点系统的隐式求解:
+
+![image-20210120195002746](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210120195002746.png)
+
+在(2)带入到（3）中时刻，vt以及xt是已知量 ，（3）中f函数是一个非线性的函数
+
+（3）到（4）通过泰勒展开展开为一阶，变为线性公式
+
+![image-20210120195432034](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210120195432034.png)
+
+![image-20210120195542016](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210120195542016.png)
+
+使用雅各比迭代求解Vt+1
+
+![image-20210120195624141](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210120195624141.png)
+
+显示欧拉与隐式欧拉可以表示为同一个形式一个样子
+
+![image-20210120200756824](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210120200756824.png)
+
+## 用拉格朗日法解流体力学（拉格朗日视角）
+
+![image-20210120201355394](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210120201355394.png)
+
+SPH
+
+用一堆粒子，每个粒子力包含物理量，用一个核函数去近似连续的场
+
+用核函数W来对周围例子进行smooth,中间大，远离小，越远贡献越小
+
+A是任何随空间变化物理量，如速度，位置，密度，压力
+
+
+
+![image-20210120201822127](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210120201822127.png)
+
+sph一开始用来求解天体物理，不需要mesh非常适合自由表面流体
+
+一盆水是自由表面流体，烟雾模拟不是自由表面流体
+
+sph很少用来模拟烟雾，因为需要将空间填满，对于烟雾所在整个大的空气中不适合
+
+![image-20210120202143384](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210120202143384.png)
+
+D表示某个粒子
+
+![image-20210908152848436](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210908152848436.png)
+
+表示粒子内力。g为外力
+
+A表示压强或其他变量，这里A表示压强，将Ai=pi带入
+
+最简单方法WCSPH
+
+![image-20210120202256918](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210120202256918.png)速度对于时间的导数
+
+![image-20210120202416012](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210120202416012.png)压强的梯度除以密度，得到加速度，左边流体内力，g是外力
+
+![image-20210120202803204](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210120202803204.png)
+
+压强求解公式，![image-20210120202845044](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210120202845044.png)理想密度
+
+算梯度如何求解：
+
+![image-20210120204015425](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210120204015425.png)
+
+来计算![image-20210120204026781](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210120204026781.png)
+
+
+
+### 流体方程求解
+
+![image-20210120204053974](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210120204053974.png)
+
+1.对于每个粒子计算他的压强
+
+2.求解每个粒子梯度
+
+3.用欧拉求解，和这里后和弹簧质点模型基本一样
+
+也就是![image-20210120204748451](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210120204748451.png)不同，弹簧质量遵循胡克定律，sph是通过压强推出来的，同理fem
+
+![image-20210120204858240](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210120204858240.png)
+
+PCI-SPH类似隐式积分，用预测矫正
+
+PBF是PBD和SPH结合，模拟流体的方法
+
+### 显示时间积分
+
+![image-20210120205207984](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210120205207984.png)
+
+显示时间积分，之前要满足![image-20210120205246030](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210120205246030.png)预防模型爆炸，考虑模型刚度来进行时间步长限制。
+
+**之前从粒子质量和刚度考虑，从粒子运动速度考虑时间步长限制**
+
+公式用来设置计算时间间隔
+
+### 加速SPH
+
+![image-20210120211240842](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210120211240842.png)
+
+找粒子周围接近的粒子，维护一个data structure
+
+维护一个在立方体里的粒子。每个粒子只需要找周围的几十个粒子
+
+其他的模拟粒子方法
+
+![image-20210120211650956](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210120211650956.png)
+
+discrete element method 模拟沙子
+
+渲染用marching cube
+
+
+
+openvdb smoothing
+
+
+
+# Chapter 2
+
+![image-20210120220548470](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210120220548470.png)
+
+## 形变以及形变梯度关系：形变梯度与顶点位置有关
+
+![image-20210120220629053](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210120220629053.png)
+
+J是形变后的体积除以静止状态体积，行列式是体积的变化
+
+## 应变能量密度函数
+
+![image-20210121103751279](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210121103751279.png)
+
+stress 材料用来恢复原来体积形状的内力
+
+strain 材料形变
+
+![image-20210121104057232](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210121104057232.png)
+
+stress二阶张量，（3*3矩阵）作用：给一个很小的截面，法向量乘以应力，可以获得该截面对周围材料施加的力
+
+例如PK1, 在F点的求职等于形变能量函数对于形变梯度的导数。
+
+## 杨氏模量泊松比
+
+![image-20210908165443917](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210908165443917.png)
+
+泊松比影响拉伸材料时，材料中间部分的面积
+
+K在可压缩液体中使用。
+
+## 超弹性模型的应变能量密度函数：与形变梯度和杨氏模量泊松比有关
+
+
+
+![image-20210908165902236](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210908165902236.png)
+
+Linear ealsticity材料旋转时，体积无条件变大。小型变，不会进行旋转，会到处线性方程组容易计算。
+
+各向同性材料通常使用Neo-Hookean:
+
+
+
+![image-20210908170407418](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210908170407418.png)
+
+## U(e)弹性势能的计算方式：与形变梯度和应变能量密度函数有关
+
+![image-20210908170617897](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210908170617897.png)
+
+![image-20210908172543437](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210908172543437.png)为形变能量密度函数
+
+## F形变梯度的计算方式：
+
+解弹性问题，通常假定一个元素形变梯度为常量。
+
+![image-20210908170931207](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210908170931207.png)
+
+表示一个元素通过形变梯度得到新的形变位置Xdeformed， b为offset为旋转平移带来的位置变化
+
+对于三角形可以计算其弹性势能。（能量的密度函数，关于体积的积分，就是弹性势能）
+
+
+
+![image-20210908171152263](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210908171152263.png)
+
+为能量密度函数
+
+![image-20210908171328543](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210908171328543.png)
+
+![image-20210908171508776](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210908171508776.png)
+
+由此得到4个线性约束。B是常数，**只和静止状态三角形的关系有关。可以进行预计算**
+
+## 显示时间积分计算有限元
+
+![image-20210908172119741](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210908172119741.png)
+
+顶点上的受力，是顶点上势能关于顶点位置的导数再去负数。 Ve静止状态下体积
+
+![image-20210908194312300](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210908194312300.png)
+
+计算应变能量密度函数
+
+## 隐式时间积分计算有限元
+
+![image-20210908195313930](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210908195313930.png)
+
+
+
+# Chapter3 欧拉法流体模拟
+
+## Overview
+
+![image-20210909200923634](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210909200923634.png)
+
+![image-20210909201733628](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210909201733628.png)
+
+材料导数（ 用大写的D）联系了欧拉视角和拉格朗日视角
+
+包含两个意义
+
+1. 物理量关于时间的导数
+2. 材料在这个点的速度（由于材料的移动）
+
+例如温度的变化包含两种成分
+
+把温度记录在粒子上面
+
+首先粒子不动，那么温度也会更改，粒子移动，那么温度也会改变
+
+![image-20210909202347182](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210909202347182.png)
+
+### NS方程变种简单的版本
+
+公式（3）流体里一个小的粒子或者以小包材料，他的速度关于时间的导数有三个成分
+
+1. 压强的梯度导致的贡献
+2. 粘性，（通常在图形学中忽略掉，因为通常希望搓出来涡流等效果）
+3. g重力加速度
+
+<u>由于是不可压缩的流体，其速度场不能有散度</u>，如果有散度，那么局部就会由于材料的流入流出导致流体被压缩或者延申，其后果为密度会变化，因此对于不可压缩流体，速度散度为0.
+
+![image-20210909203324159](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210909203324159.png)
+
+Operator splitting简要表示为把一个关于时间的PDE拆成若干个部分，使每部分都很简单。
+
+1. 首先，将右端项忽略掉，只留左边认为是0 如公式（6）
+2. 考虑g的部分 公式(7)
+3. 将压强的贡献，以及速度长散度为0考虑得到公式（8）
+
+![image-20210909204851643](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210909204851643.png)
+
+Advection: 指移动流体的场，或者为通过当前的速度场求解出下一个时间步的速度场的初始版本，但没有考虑到外力以及压强等条件。 （u*下一个时间步长的速度场结果）
+
+External forces：在速度场的基础之上加上外力，（u**通过上一步结果计算）
+
+Projection:由于u**是通过Advection和外力的修改可能会产生散度，在加上压强的作用，使新的速度场散度为0.
+
+## Grid
+
+#### 考虑如何表示速度场？
+
+![image-20210909205727850](C:\Users\18838\AppData\Roaming\Typora\typora-user-images\image-20210909205727850.png)
+
+数据结构使用均匀网格（也可以用三角形网格，四面体网格等）二维为正方形，三维场景为6面体。
+
