@@ -579,12 +579,63 @@ condition number是矩阵的最大特征值除以最小特征值。
 
 通常找到一个与A接近的M。
 
+A的对角阵很容易求逆，可以使用，方法为Jacobi preconditioner
+
 multigrid的效果非常好。
 
 ### Multigrid methods：找到与A相似的M矩阵 perconditioners方法
 
 ![image-20210914214152765](/image-20210914214152765.png)
 
+Multigrid methods方法可以快速近似到 invert A
+
+将residual(余量)不断地做Restrict，将4个格子合并为一个格子，然后再格子上做Gauss Seidel然后再Compute Residuals
+
+最后建立一系列网格，从最粗的到最细的。到最粗的网格，直接用direct solver。
+
+总结为，将residual的网格做multigrid 的处理可以再多个尺度上消灭 Residual。
+
+
+
+因为对于Laplace operator的discretization，对于一个cell与周围的4个cell做的discretization
+
+那么每一次计算的Laplace operator作用（计算散度）的单元非常小，只有5个cell
+
+很多时候速度散度通常是low frequence的散度，这个散度没有办法被捕捉到。
+
+
+
 建立系列网格，将residual进行multigrid处理，从而使得在多个尺度上进行
 
 ![image-20210914214615743](/image-20210914214615743.png)
+
+可能会由不同的层，那么层数的选取，层数太少那么cost level,box数量很多求解很慢，层数太多会失去对集合信息的把握：一般解到最底层可以直接direct solver就不在加层数
+
+### MGPCG
+
+![image-20210915201902041](/image-20210915201902041.png)
+
+![image-20210915204313563](/image-20210915204313563.png)
+
+欧拉的流体模拟在图形学中，对于每个Time step两种操作，
+
+Advection：移动流体 。
+
+Projection：保证速度场是无散的。
+
+## 两种论文提出解决能量损失
+
+![image-20210915205407274](/image-20210915205407274.png)
+
+原始的速度场进行了Advection，后得到一个有散度分量和一个无散度分量，在做projection后，将有散度分量给投影掉后，动能会损失，从而会导致涡量丢掉。
+
+IVOCK：提高涡量数值场降低流体粘性。
+
+![image-20210915205638716](/image-20210915205638716.png)
+
+Advection后projection，不去一次全部Projection，在advection中间做一次projection,会使能量损失小很多。
+
+![image-20210915205928284](/image-20210915205928284.png)
+
+前面的大多使烟雾，没有考虑流体表明。参考文件12.
+
